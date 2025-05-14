@@ -19,10 +19,19 @@ public class AmostraService {
     @Autowired private CarrapatoRepository carrapatoRepository;
     @Autowired private EscorpiaoRepository escorpiaoRepository;
     @Autowired private FlebotomineoRepository flebotomineoRepository;
+    @Autowired private StatusAmostraRepository statusAmostraRepository; // Novo repositório para StatusAmostra
 
     // Criar amostra com atributos específicos
     public Amostra criarAmostraComTipo(Amostra amostra) {
         amostra = amostraRepository.save(amostra);
+
+        // Adicionar ou atualizar o StatusAmostra
+        StatusAmostra statusAmostra = new StatusAmostra();
+        statusAmostra.setAmostra(amostra);
+        statusAmostra.setDescricao("pendente"); // Status inicial
+        statusAmostraRepository.save(statusAmostra);
+
+
 
         switch (amostra.getTipoAmostra().toLowerCase()) {
             case "larva":
@@ -68,66 +77,66 @@ public class AmostraService {
         return amostra;
     }
 
-    // Editar amostra, se status != 3
+    // Editar amostra, se status não for "despachada"
     public Amostra editarAmostra(UUID id, Amostra novaAmostra) {
         Optional<Amostra> existente = amostraRepository.findById(id);
         if (existente.isPresent()) {
             Amostra atual = existente.get();
-            if (!"3".equals(atual.getStatusAmostra())) {
-                novaAmostra.setIdAmostra(id);
-
-                // Verificar e ajustar as entidades dependentes, como larva, triatomineo, etc.
-                switch (novaAmostra.getTipoAmostra().toLowerCase()) {
-                    case "larva":
-                        if (novaAmostra.getLarva() == null) {
-                            throw new IllegalArgumentException("Dados de larva são obrigatórios.");
-                        }
-                        novaAmostra.getLarva().setAmostra(novaAmostra);
-                        larvaRepository.save(novaAmostra.getLarva());
-                        break;
-                    case "triatomineo":
-                        if (novaAmostra.getTriatomineo() == null) {
-                            throw new IllegalArgumentException("Dados de triatomineo são obrigatórios.");
-                        }
-                        novaAmostra.getTriatomineo().setAmostra(novaAmostra);
-                        triatomineoRepository.save(novaAmostra.getTriatomineo());
-                        break;
-                    case "molusco":
-                        if (novaAmostra.getMolusco() == null) {
-                            throw new IllegalArgumentException("Dados de molusco são obrigatórios.");
-                        }
-                        novaAmostra.getMolusco().setAmostra(novaAmostra);
-                        moluscoRepository.save(novaAmostra.getMolusco());
-                        break;
-                    case "carrapato":
-                        if (novaAmostra.getCarrapato() == null) {
-                            throw new IllegalArgumentException("Dados de carrapato são obrigatórios.");
-                        }
-                        novaAmostra.getCarrapato().setAmostra(novaAmostra);
-                        carrapatoRepository.save(novaAmostra.getCarrapato());
-                        break;
-                    case "escorpiao":
-                        if (novaAmostra.getEscorpiao() == null) {
-                            throw new IllegalArgumentException("Dados de escorpião são obrigatórios.");
-                        }
-                        novaAmostra.getEscorpiao().setAmostra(novaAmostra);
-                        escorpiaoRepository.save(novaAmostra.getEscorpiao());
-                        break;
-                    case "flebotomineo":
-                        if (novaAmostra.getFlebotomineo() == null) {
-                            throw new IllegalArgumentException("Dados de flebotomíneo são obrigatórios.");
-                        }
-                        novaAmostra.getFlebotomineo().setAmostra(novaAmostra);
-                        flebotomineoRepository.save(novaAmostra.getFlebotomineo());
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Tipo de amostra inválido.");
-                }
-
-                return amostraRepository.save(novaAmostra);
-            } else {
-                throw new IllegalStateException("Amostra com status 3 não pode ser editada.");
+            // Verifica se a amostra já está despachada
+            if ("despachada".equals(atual.getStatusAmostra().getDescricao())) {
+                throw new IllegalStateException("Amostra com status 'despachada' não pode ser editada.");
             }
+            novaAmostra.setIdAmostra(id);
+
+            // Verificar e ajustar as entidades dependentes, como larva, triatomineo, etc.
+            switch (novaAmostra.getTipoAmostra().toLowerCase()) {
+                case "larva":
+                    if (novaAmostra.getLarva() == null) {
+                        throw new IllegalArgumentException("Dados de larva são obrigatórios.");
+                    }
+                    novaAmostra.getLarva().setAmostra(novaAmostra);
+                    larvaRepository.save(novaAmostra.getLarva());
+                    break;
+                case "triatomineo":
+                    if (novaAmostra.getTriatomineo() == null) {
+                        throw new IllegalArgumentException("Dados de triatomineo são obrigatórios.");
+                    }
+                    novaAmostra.getTriatomineo().setAmostra(novaAmostra);
+                    triatomineoRepository.save(novaAmostra.getTriatomineo());
+                    break;
+                case "molusco":
+                    if (novaAmostra.getMolusco() == null) {
+                        throw new IllegalArgumentException("Dados de molusco são obrigatórios.");
+                    }
+                    novaAmostra.getMolusco().setAmostra(novaAmostra);
+                    moluscoRepository.save(novaAmostra.getMolusco());
+                    break;
+                case "carrapato":
+                    if (novaAmostra.getCarrapato() == null) {
+                        throw new IllegalArgumentException("Dados de carrapato são obrigatórios.");
+                    }
+                    novaAmostra.getCarrapato().setAmostra(novaAmostra);
+                    carrapatoRepository.save(novaAmostra.getCarrapato());
+                    break;
+                case "escorpiao":
+                    if (novaAmostra.getEscorpiao() == null) {
+                        throw new IllegalArgumentException("Dados de escorpião são obrigatórios.");
+                    }
+                    novaAmostra.getEscorpiao().setAmostra(novaAmostra);
+                    escorpiaoRepository.save(novaAmostra.getEscorpiao());
+                    break;
+                case "flebotomineo":
+                    if (novaAmostra.getFlebotomineo() == null) {
+                        throw new IllegalArgumentException("Dados de flebotomíneo são obrigatórios.");
+                    }
+                    novaAmostra.getFlebotomineo().setAmostra(novaAmostra);
+                    flebotomineoRepository.save(novaAmostra.getFlebotomineo());
+                    break;
+                default:
+                    throw new IllegalArgumentException("Tipo de amostra inválido.");
+            }
+
+            return amostraRepository.save(novaAmostra);
         } else {
             throw new IllegalArgumentException("Amostra não encontrada.");
         }
@@ -138,6 +147,11 @@ public class AmostraService {
         Optional<Amostra> amostraOpt = amostraRepository.findById(id);
         if (amostraOpt.isPresent()) {
             Amostra amostra = amostraOpt.get();
+            // Verificar se a amostra tem status "despachada"
+            if ("despachada".equals(amostra.getStatusAmostra().getDescricao())) {
+                throw new IllegalStateException("Amostra com status 'despachada' não pode ser excluída.");
+            }
+
             switch (amostra.getTipoAmostra().toLowerCase()) {
                 case "larva":
                     larvaRepository.deleteByAmostraIdAmostra(id);

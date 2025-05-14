@@ -14,13 +14,14 @@ public class Amostra {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID idAmostra;
 
-    private String protocolo;
     private Date dataColeta;
-    private String statusAmostra;
     private String tipoAmostra;
     private Date validade;
     private String estado;
     private UUID idUsuario;
+
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    private StatusAmostra statusAmostra;
 
     @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -50,14 +51,8 @@ public class Amostra {
     public UUID getIdAmostra() { return idAmostra; }
     public void setIdAmostra(UUID idAmostra) { this.idAmostra = idAmostra; }
 
-    public String getProtocolo() { return protocolo; }
-    public void setProtocolo(String protocolo) { this.protocolo = protocolo; }
-
     public Date getDataColeta() { return dataColeta; }
     public void setDataColeta(Date dataColeta) { this.dataColeta = dataColeta; }
-
-    public String getStatusAmostra() { return statusAmostra; }
-    public void setStatusAmostra(String statusAmostra) { this.statusAmostra = statusAmostra; }
 
     public String getTipoAmostra() { return tipoAmostra; }
     public void setTipoAmostra(String tipoAmostra) { this.tipoAmostra = tipoAmostra; }
@@ -70,6 +65,9 @@ public class Amostra {
 
     public UUID getIdUsuario() { return idUsuario; }
     public void setIdUsuario(UUID idUsuario) { this.idUsuario = idUsuario; }
+
+    public StatusAmostra getStatusAmostra() { return statusAmostra; }
+    public void setStatusAmostra(StatusAmostra statusAmostra) { this.statusAmostra = statusAmostra; }
 
     public Larva getLarva() { return larva; }
     public void setLarva(Larva larva) { this.larva = larva; }

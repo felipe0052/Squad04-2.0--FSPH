@@ -19,6 +19,11 @@ public class AmostraController {
     @PostMapping
     public ResponseEntity<Amostra> criar(@RequestBody Amostra amostra) {
         try {
+            // Verificar se o status é "3" (despachada) ao criar a amostra
+            if (amostra.getStatusAmostra() != null && "despachada".equals(amostra.getStatusAmostra().getDescricao())) {
+                return ResponseEntity.status(400).body(null);  // Não pode criar uma amostra com status "despachada"
+            }
+
             Amostra createdAmostra = amostraService.criarAmostraComTipo(amostra);
             return ResponseEntity.ok(createdAmostra);
         } catch (Exception e) {
@@ -36,13 +41,19 @@ public class AmostraController {
         try {
             Optional<Amostra> amostraExistente = amostraService.buscarPorId(id);
             if (amostraExistente.isPresent()) {
+                // Verificar se o status da amostra existente é "despachada"
+                Amostra amostraAtual = amostraExistente.get();
+                if (amostraAtual.getStatusAmostra() != null && "despachada".equals(amostraAtual.getStatusAmostra().getDescricao())) {
+                    return ResponseEntity.status(403).body("Amostra com status despachada não pode ser editada.");
+                }
+
                 Amostra amostraAtualizada = amostraService.editarAmostra(id, novaAmostra);
                 return ResponseEntity.ok(amostraAtualizada);
             } else {
                 return ResponseEntity.status(404).body("Amostra não encontrada.");
             }
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(403).body("Amostra com status 3 não pode ser editada.");
+            return ResponseEntity.status(403).body("Amostra com status despachada não pode ser editada.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body("Amostra não encontrada.");
         } catch (Exception e) {
@@ -56,6 +67,12 @@ public class AmostraController {
         try {
             Optional<Amostra> amostraExistente = amostraService.buscarPorId(id);
             if (amostraExistente.isPresent()) {
+                Amostra amostra = amostraExistente.get();
+                // Verificar se o status é "despachada" antes de deletar
+                if (amostra.getStatusAmostra() != null && "despachada".equals(amostra.getStatusAmostra().getDescricao())) {
+                    return ResponseEntity.status(403).body("Amostra com status despachada não pode ser excluída.");
+                }
+
                 amostraService.deletarAmostra(id);
                 return ResponseEntity.ok("Amostra deletada com sucesso.");
             } else {
