@@ -1,197 +1,153 @@
 package com.FSPH.Project.service;
 
 import com.FSPH.Project.model.*;
-import com.FSPH.Project.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.FSPH.Project.repository.AmostraRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+
+import static com.FSPH.Project.model.TipoAmostra.*;
 
 @Service
 public class AmostraService {
 
-    @Autowired private AmostraRepository amostraRepository;
-    @Autowired private LarvaRepository larvaRepository;
-    @Autowired private TriatomineoRepository triatomineoRepository;
-    @Autowired private MoluscoRepository moluscoRepository;
-    @Autowired private CarrapatoRepository carrapatoRepository;
-    @Autowired private EscorpiaoRepository escorpiaoRepository;
-    @Autowired private FlebotomineoRepository flebotomineoRepository;
-    @Autowired private StatusAmostraRepository statusAmostraRepository; // Novo repositório para StatusAmostra
+    private final AmostraRepository amostraRepository;
 
-    // Criar amostra com atributos específicos
-    public Amostra criarAmostraComTipo(Amostra amostra) {
-        amostra = amostraRepository.save(amostra);
+    public AmostraService(AmostraRepository amostraRepository) {
+        this.amostraRepository = amostraRepository;
+    }
 
-        // Adicionar ou atualizar o StatusAmostra
-        StatusAmostra statusAmostra = new StatusAmostra();
-        statusAmostra.setAmostra(amostra);
-        statusAmostra.setDescricao("pendente"); // Status inicial
-        statusAmostraRepository.save(statusAmostra);
+    @Transactional
+    public Amostra salvarAmostra(Amostra amostra) {
+        validarTipoSubEntidade(amostra);
+        setAmostraParaSubEntidade(amostra);
+        return amostraRepository.save(amostra);
+    }
 
+    @Transactional
+    public Amostra editarAmostra(UUID id, Amostra amostraAtualizada) {
+        Amostra amostraExistente = amostraRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Amostra não encontrada"));
 
+        // Só permite editar se status não for "despachada"
+        if (amostraExistente.getStatusAmostra() != null
+                && "despachada".equalsIgnoreCase(amostraExistente.getStatusAmostra().getDescricao())) {
+            throw new RuntimeException("Amostra despachada não pode ser editada");
+        }
 
-        switch (amostra.getTipoAmostra().toLowerCase()) {
-            case "larva":
-                Larva larva = amostra.getLarva();
-                if (larva == null) throw new IllegalArgumentException("Dados de larva são obrigatórios.");
-                larva.setAmostra(amostra);
-                larvaRepository.save(larva);
+        // Atualiza campos básicos (data, tipo, validade, estado, usuario)
+        amostraExistente.setDataColeta(amostraAtualizada.getDataColeta());
+        amostraExistente.setTipoAmostra(amostraAtualizada.getTipoAmostra());
+        amostraExistente.setValidade(amostraAtualizada.getValidade());
+        amostraExistente.setEstado(amostraAtualizada.getEstado());
+        amostraExistente.setIdUsuario(amostraAtualizada.getIdUsuario());
+
+        // Atualiza subentidades (limpa e seta novamente)
+        limparSubEntidades(amostraExistente);
+        copiarSubEntidade(amostraExistente, amostraAtualizada);
+
+        validarTipoSubEntidade(amostraExistente);
+        setAmostraParaSubEntidade(amostraExistente);
+
+        return amostraRepository.save(amostraExistente);
+    }
+
+    @Transactional
+    public void deletar(UUID id) {
+        Amostra amostra = amostraRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Amostra não encontrada"));
+
+        if (amostra.getStatusAmostra() != null
+                && "despachada".equalsIgnoreCase(amostra.getStatusAmostra().getDescricao())) {
+            throw new RuntimeException("Amostra despachada não pode ser deletada");
+        }
+        amostraRepository.delete(amostra);
+    }
+
+    private void validarTipoSubEntidade(Amostra amostra) {
+        // Limpa todas subentidades
+        limparSubEntidades(amostra);
+
+        // Verifica a subentidade correta conforme tipo
+        switch (amostra.getTipoAmostra()) {
+            case LARVA:
+                if (amostra.getLarva() == null) throw new RuntimeException("Larva deve estar preenchida para tipo LARVA");
                 break;
-            case "triatomineo":
-                Triatomineo triatomineo = amostra.getTriatomineo();
-                if (triatomineo == null) throw new IllegalArgumentException("Dados de triatomineo são obrigatórios.");
-                triatomineo.setAmostra(amostra);
-                triatomineoRepository.save(triatomineo);
+            case MOLUSCO:
+                if (amostra.getMolusco() == null) throw new RuntimeException("Molusco deve estar preenchido para tipo MOLUSCO");
                 break;
-            case "molusco":
-                Molusco molusco = amostra.getMolusco();
-                if (molusco == null) throw new IllegalArgumentException("Dados de molusco são obrigatórios.");
-                molusco.setAmostra(amostra);
-                moluscoRepository.save(molusco);
+            case ESCORPIAO:
+                if (amostra.getEscorpiao() == null) throw new RuntimeException("Escorpiao deve estar preenchido para tipo ESCORPIAO");
                 break;
-            case "carrapato":
-                Carrapato carrapato = amostra.getCarrapato();
-                if (carrapato == null) throw new IllegalArgumentException("Dados de carrapato são obrigatórios.");
-                carrapato.setAmostra(amostra);
-                carrapatoRepository.save(carrapato);
+            case CARRAPATO:
+                if (amostra.getCarrapato() == null) throw new RuntimeException("Carrapato deve estar preenchido para tipo CARRAPATO");
                 break;
-            case "escorpiao":
-                Escorpiao escorpiao = amostra.getEscorpiao();
-                if (escorpiao == null) throw new IllegalArgumentException("Dados de escorpião são obrigatórios.");
-                escorpiao.setAmostra(amostra);
-                escorpiaoRepository.save(escorpiao);
+            case FLEBOTOMINEO:
+                if (amostra.getFlebotomineo() == null) throw new RuntimeException("Flebotomineo deve estar preenchido para tipo FLEBOTOMINEO");
                 break;
-            case "flebotomineo":
-                Flebotomineo flebotomineo = amostra.getFlebotomineo();
-                if (flebotomineo == null) throw new IllegalArgumentException("Dados de flebotomíneo são obrigatórios.");
-                flebotomineo.setAmostra(amostra);
-                flebotomineoRepository.save(flebotomineo);
+            case TRIATOMINEO:
+                if (amostra.getTriatomineo() == null) throw new RuntimeException("Triatomineo deve estar preenchido para tipo TRIATOMINEO");
                 break;
             default:
-                throw new IllegalArgumentException("Tipo de amostra inválido.");
-        }
-
-        return amostra;
-    }
-
-    // Editar amostra, se status não for "despachada"
-    public Amostra editarAmostra(UUID id, Amostra novaAmostra) {
-        Optional<Amostra> existente = amostraRepository.findById(id);
-        if (existente.isPresent()) {
-            Amostra atual = existente.get();
-            // Verifica se a amostra já está despachada
-            if ("despachada".equals(atual.getStatusAmostra().getDescricao())) {
-                throw new IllegalStateException("Amostra com status 'despachada' não pode ser editada.");
-            }
-            novaAmostra.setIdAmostra(id);
-
-            // Verificar e ajustar as entidades dependentes, como larva, triatomineo, etc.
-            switch (novaAmostra.getTipoAmostra().toLowerCase()) {
-                case "larva":
-                    if (novaAmostra.getLarva() == null) {
-                        throw new IllegalArgumentException("Dados de larva são obrigatórios.");
-                    }
-                    novaAmostra.getLarva().setAmostra(novaAmostra);
-                    larvaRepository.save(novaAmostra.getLarva());
-                    break;
-                case "triatomineo":
-                    if (novaAmostra.getTriatomineo() == null) {
-                        throw new IllegalArgumentException("Dados de triatomineo são obrigatórios.");
-                    }
-                    novaAmostra.getTriatomineo().setAmostra(novaAmostra);
-                    triatomineoRepository.save(novaAmostra.getTriatomineo());
-                    break;
-                case "molusco":
-                    if (novaAmostra.getMolusco() == null) {
-                        throw new IllegalArgumentException("Dados de molusco são obrigatórios.");
-                    }
-                    novaAmostra.getMolusco().setAmostra(novaAmostra);
-                    moluscoRepository.save(novaAmostra.getMolusco());
-                    break;
-                case "carrapato":
-                    if (novaAmostra.getCarrapato() == null) {
-                        throw new IllegalArgumentException("Dados de carrapato são obrigatórios.");
-                    }
-                    novaAmostra.getCarrapato().setAmostra(novaAmostra);
-                    carrapatoRepository.save(novaAmostra.getCarrapato());
-                    break;
-                case "escorpiao":
-                    if (novaAmostra.getEscorpiao() == null) {
-                        throw new IllegalArgumentException("Dados de escorpião são obrigatórios.");
-                    }
-                    novaAmostra.getEscorpiao().setAmostra(novaAmostra);
-                    escorpiaoRepository.save(novaAmostra.getEscorpiao());
-                    break;
-                case "flebotomineo":
-                    if (novaAmostra.getFlebotomineo() == null) {
-                        throw new IllegalArgumentException("Dados de flebotomíneo são obrigatórios.");
-                    }
-                    novaAmostra.getFlebotomineo().setAmostra(novaAmostra);
-                    flebotomineoRepository.save(novaAmostra.getFlebotomineo());
-                    break;
-                default:
-                    throw new IllegalArgumentException("Tipo de amostra inválido.");
-            }
-
-            return amostraRepository.save(novaAmostra);
-        } else {
-            throw new IllegalArgumentException("Amostra não encontrada.");
+                throw new IllegalArgumentException("Tipo de amostra inválido");
         }
     }
 
-    // Deletar amostra com tipo específico
-    public void deletarAmostra(UUID id) {
-        Optional<Amostra> amostraOpt = amostraRepository.findById(id);
-        if (amostraOpt.isPresent()) {
-            Amostra amostra = amostraOpt.get();
-            // Verificar se a amostra tem status "despachada"
-            if ("despachada".equals(amostra.getStatusAmostra().getDescricao())) {
-                throw new IllegalStateException("Amostra com status 'despachada' não pode ser excluída.");
-            }
+    private void limparSubEntidades(Amostra amostra) {
+        amostra.setLarva(null);
+        amostra.setMolusco(null);
+        amostra.setEscorpiao(null);
+        amostra.setCarrapato(null);
+        amostra.setFlebotomineo(null);
+        amostra.setTriatomineo(null);
+    }
 
-            switch (amostra.getTipoAmostra().toLowerCase()) {
-                case "larva":
-                    larvaRepository.deleteByAmostraIdAmostra(id);
-                    break;
-                case "triatomineo":
-                    triatomineoRepository.deleteByAmostraIdAmostra(id);
-                    break;
-                case "molusco":
-                    moluscoRepository.deleteByAmostraIdAmostra(id);
-                    break;
-                case "carrapato":
-                    carrapatoRepository.deleteByAmostraIdAmostra(id);
-                    break;
-                case "escorpiao":
-                    escorpiaoRepository.deleteByAmostraIdAmostra(id);
-                    break;
-                case "flebotomineo":
-                    flebotomineoRepository.deleteByAmostraIdAmostra(id);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Tipo de amostra não suportado.");
-            }
-            amostraRepository.deleteById(id);
-        } else {
-            throw new IllegalArgumentException("Amostra não encontrada.");
+    private void copiarSubEntidade(Amostra destino, Amostra origem) {
+        switch (origem.getTipoAmostra()) {
+            case LARVA:
+                destino.setLarva(origem.getLarva());
+                break;
+            case MOLUSCO:
+                destino.setMolusco(origem.getMolusco());
+                break;
+            case ESCORPIAO:
+                destino.setEscorpiao(origem.getEscorpiao());
+                break;
+            case CARRAPATO:
+                destino.setCarrapato(origem.getCarrapato());
+                break;
+            case FLEBOTOMINEO:
+                destino.setFlebotomineo(origem.getFlebotomineo());
+                break;
+            case TRIATOMINEO:
+                destino.setTriatomineo(origem.getTriatomineo());
+                break;
         }
     }
 
-    // Listar todas as amostras
+    private void setAmostraParaSubEntidade(Amostra amostra) {
+        if (amostra.getLarva() != null) amostra.getLarva().setAmostra(amostra);
+        if (amostra.getMolusco() != null) amostra.getMolusco().setAmostra(amostra);
+        if (amostra.getEscorpiao() != null) amostra.getEscorpiao().setAmostra(amostra);
+        if (amostra.getCarrapato() != null) amostra.getCarrapato().setAmostra(amostra);
+        if (amostra.getFlebotomineo() != null) amostra.getFlebotomineo().setAmostra(amostra);
+        if (amostra.getTriatomineo() != null) amostra.getTriatomineo().setAmostra(amostra);
+    }
+
+    public Amostra buscarPorId(UUID id) {
+        return amostraRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Amostra não encontrada"));
+
+    }
+
+    public List<Amostra> buscarPorTipo(TipoAmostra tipoAmostra) {
+        return amostraRepository.findByTipoAmostra(tipoAmostra);
+    }
+
+
     public List<Amostra> listarTodas() {
         return amostraRepository.findAll();
-    }
-
-    // Buscar amostra por ID
-    public Optional<Amostra> buscarPorId(UUID id) {
-        return amostraRepository.findById(id);
-    }
-
-    // Buscar por tipo de amostra
-    public List<Amostra> buscarPorTipo(String tipoAmostra) {
-        return amostraRepository.findByTipoAmostraIgnoreCase(tipoAmostra);
     }
 }
