@@ -1,13 +1,13 @@
 package com.FSPH.Project.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Amostra {
 
     @Id
@@ -15,35 +15,39 @@ public class Amostra {
     private UUID idAmostra;
 
     private Date dataColeta;
-    private String tipoAmostra;
+
+    @Enumerated(EnumType.STRING)
+    private TipoAmostra tipoAmostra;
+
     private Date validade;
     private String estado;
     private UUID idUsuario;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference
     private StatusAmostra statusAmostra;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private Larva larva;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private Triatomineo triatomineo;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private Molusco molusco;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private Carrapato carrapato;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private Escorpiao escorpiao;
 
-    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private Flebotomineo flebotomineo;
 
@@ -53,10 +57,7 @@ public class Amostra {
 
     public Date getDataColeta() { return dataColeta; }
     public void setDataColeta(Date dataColeta) { this.dataColeta = dataColeta; }
-
-    public String getTipoAmostra() { return tipoAmostra; }
-    public void setTipoAmostra(String tipoAmostra) { this.tipoAmostra = tipoAmostra; }
-
+    
     public Date getValidade() { return validade; }
     public void setValidade(Date validade) { this.validade = validade; }
 
@@ -86,4 +87,24 @@ public class Amostra {
 
     public Flebotomineo getFlebotomineo() { return flebotomineo; }
     public void setFlebotomineo(Flebotomineo flebotomineo) { this.flebotomineo = flebotomineo; }
+
+
+
+// Método helper para limpar subentidades para validação
+    public void clearSubEntidades() {
+        this.larva = null;
+        this.triatomineo = null;
+        this.molusco = null;
+        this.carrapato = null;
+        this.escorpiao = null;
+        this.flebotomineo = null;
+    }
+
+    public TipoAmostra getTipoAmostra() {
+        return tipoAmostra;
+    }
+
+    public void setTipoAmostra(TipoAmostra tipoAmostra) {
+        this.tipoAmostra = tipoAmostra;
+    }
 }

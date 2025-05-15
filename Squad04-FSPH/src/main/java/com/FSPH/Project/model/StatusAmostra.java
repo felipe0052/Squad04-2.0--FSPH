@@ -1,5 +1,6 @@
 package com.FSPH.Project.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ public class StatusAmostra {
     @OneToOne
     @MapsId
     @JoinColumn(name = "id")
+    @JsonBackReference
     private Amostra amostra;
 
     private String descricao;

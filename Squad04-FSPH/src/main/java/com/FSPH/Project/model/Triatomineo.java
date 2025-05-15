@@ -1,12 +1,14 @@
 package com.FSPH.Project.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Triatomineo {
 
-    @Id
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer idTriatomineo;
 
