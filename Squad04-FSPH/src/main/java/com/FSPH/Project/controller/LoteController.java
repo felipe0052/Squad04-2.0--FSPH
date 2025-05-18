@@ -21,7 +21,7 @@ public class LoteController {
 
     @GetMapping
     public ResponseEntity<List<Lote>> listarTodos() {
-        return ResponseEntity.ok(LoteService.listarTodos());
+        return ResponseEntity.ok(loteService.listarTodos());
     }
 
 }
