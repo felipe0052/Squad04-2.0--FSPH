@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class LoteService {
@@ -19,6 +20,10 @@ public class LoteService {
         lote.setProtocolo(protocolo);
         lote.setDataCriacao(java.sql.Date.valueOf(LocalDate.now())); // define a data de criação
         return loteComumRepository.save(lote);
+    }
+
+    public List<LoteComum> listarLotes() {
+        return loteComumRepository.findAll();
     }
 
     private String gerarProtocoloLote() {
