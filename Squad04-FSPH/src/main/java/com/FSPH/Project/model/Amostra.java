@@ -23,6 +23,10 @@ public class Amostra {
     private String estado;
     private UUID idUsuario;
 
+    private String localCaptura;
+    private String enderecoResidencia;
+    private String tipoConstrucao;
+
     @OneToOne(mappedBy = "amostra", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference
     private StatusAmostra statusAmostra;
@@ -67,8 +71,14 @@ public class Amostra {
     public UUID getIdUsuario() { return idUsuario; }
     public void setIdUsuario(UUID idUsuario) { this.idUsuario = idUsuario; }
 
-    public StatusAmostra getStatusAmostra() { return statusAmostra; }
-    public void setStatusAmostra(StatusAmostra statusAmostra) { this.statusAmostra = statusAmostra; }
+    public String getLocalCaptura() { return localCaptura; }
+    public void setLocalCaptura(String localCaptura) { this.localCaptura = localCaptura; }
+
+    public String getEnderecoResidencia() { return enderecoResidencia; }
+    public void setEnderecoResidencia(String enderecoResidencia) { this.enderecoResidencia = enderecoResidencia; }
+
+    public String getTipoConstrucao() { return tipoConstrucao; }
+    public void setTipoConstrucao(String tipoConstrucao) { this.tipoConstrucao = tipoConstrucao; }
 
     public Larva getLarva() { return larva; }
     public void setLarva(Larva larva) { this.larva = larva; }
