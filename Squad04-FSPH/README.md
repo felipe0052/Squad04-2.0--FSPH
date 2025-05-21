@@ -12,10 +12,11 @@ primeiro é necessario ter as seguintes ferramentas instaladas na seguinte ordem
 
 # passo 1
 ir no terminal do intelij e selecionar o bash (terminal do git/ubuntu)
-apos isso digitar o comando docker-compose up --build para criar a build do docker q vai ser usado como um mini banco de dados 
+apos isso digitar o comando ``docker-compose up --build`` para criar a build do docker q vai ser usado como um mini banco de dados 
 # importante
-apos o container ter sido criado , para rodar so precisa do comando  docker-compose up
+apos o container ter sido criado , para rodar so precisa do comando ``docker-compose up``
 digite apenas o --build APENAS se vc tiver deletado o container anterior ou se ele nao existir
+ESPERE ATE OS TEXTOS PARAREM DE APARECER PARA PROSSEGUIR PRO SEGUNDO PASSO, SENDO O ULTIMO "SQL 306"
 
 # passo 2 
 clicar no botao de play e rodar a aplicaçao 
@@ -23,7 +24,7 @@ clicar no botao de play e rodar a aplicaçao
 espere ate a notificaçao " tomcat port 8080 " chegar para abrir o postman
 
 # passo 3
-com tudo isso feito é so ir no postman com a URL base http://localhost:8080 para a execuçao dos testes
+com tudo isso feito é so ir no postman com a URL base http://localhost:8080 para a execuçao dos testes no postman
 
 
 
