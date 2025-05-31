@@ -8,19 +8,17 @@ import java.util.UUID;
 public class StatusAmostra {
 
     @Id
-    private UUID id; // mesmo ID da Amostra
+    private int idStatusAmostra;
 
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "id")
     @JsonBackReference
     private Amostra amostra;
 
     private String descricao;
 
     // Getters e Setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public int getId() { return idStatusAmostra; }
+    public void setId(int idStatusAmostra) { this.idStatusAmostra = idStatusAmostra; }
 
     public Amostra getAmostra() { return amostra; }
     public void setAmostra(Amostra amostra) { this.amostra = amostra; }
