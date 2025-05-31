@@ -12,7 +12,7 @@ public class LoteComum {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private UUID idLoteComum;
 
     private String protocolo;
     private String tipoLote;
@@ -21,11 +21,11 @@ public class LoteComum {
 
     // Getters e Setters
     public UUID getId() {
-        return id;
+        return idLoteComum;
     }
 
     public void setId(UUID id) {
-        this.id = id;
+        this.idLoteComum = id;
     }
 
     public String getProtocolo() {
