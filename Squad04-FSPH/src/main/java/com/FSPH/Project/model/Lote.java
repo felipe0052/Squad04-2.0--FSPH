@@ -34,7 +34,6 @@ public class Lote {
     private List<Lamina> laminas;
 
     // Getters e Setters
-
     public UUID getIdLote() {
         return idLote;
     }
